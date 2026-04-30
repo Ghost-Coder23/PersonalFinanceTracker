@@ -13,6 +13,22 @@ import {
   getMonthlyTotals,
   getExpensesByCategory,
   getLast6MonthsTotals,
+  getAllCustomers,
+  insertCustomer,
+  updateCustomer,
+  deleteCustomerById,
+  getAllRecurringTransactions,
+  insertRecurringTransaction,
+  deleteRecurringTransactionById,
+  getAllTags,
+  insertTag,
+  deleteTagById,
+  getAllGoals,
+  insertGoal,
+  updateGoal,
+  deleteGoalById,
+  getSetting,
+  setSetting,
 } from '../database/db';
 import { getCurrentMonth } from '../utils/formatters';
 
@@ -24,6 +40,11 @@ const useStore = create((set, get) => ({
   monthlyTotals: { income: 0, expense: 0 },
   expensesByCategory: [],
   last6MonthsTotals: [],
+  customers: [],
+  recurringTransactions: [],
+  tags: [],
+  goals: [],
+  settings: {},
   selectedMonth: getCurrentMonth(),
   loading: false,
 
@@ -87,6 +108,73 @@ const useStore = create((set, get) => ({
     await get().loadBudgets();
   },
 
+  // ─── Customers ───────────────────────────────────────────────────────────
+  loadCustomers: async () => {
+    const customers = await getAllCustomers();
+    set({ customers });
+  },
+
+  addCustomer: async (data) => {
+    await insertCustomer(data);
+    await get().loadCustomers();
+  },
+
+  updateCustomer: async (id, data) => {
+    await updateCustomer(id, data);
+    await get().loadCustomers();
+  },
+
+  removeCustomer: async (id) => {
+    await deleteCustomerById(id);
+    await get().loadCustomers();
+  },
+
+  // ─── Recurring Transactions ─────────────────────────────────────────────
+  loadRecurringTransactions: async () => {
+    const recurringTransactions = await getAllRecurringTransactions();
+    set({ recurringTransactions });
+  },
+  addRecurringTransaction: async (data) => {
+    await insertRecurringTransaction(data);
+    await get().loadRecurringTransactions();
+  },
+  removeRecurringTransaction: async (id) => {
+    await deleteRecurringTransactionById(id);
+    await get().loadRecurringTransactions();
+  },
+
+  // ─── Tags ───────────────────────────────────────────────────────────────
+  loadTags: async () => {
+    const tags = await getAllTags();
+    set({ tags });
+  },
+  addTag: async (name) => {
+    await insertTag(name);
+    await get().loadTags();
+  },
+  removeTag: async (id) => {
+    await deleteTagById(id);
+    await get().loadTags();
+  },
+
+  // ─── Goals ──────────────────────────────────────────────────────────────
+  loadGoals: async () => {
+    const goals = await getAllGoals();
+    set({ goals });
+  },
+  addGoal: async (data) => {
+    await insertGoal(data);
+    await get().loadGoals();
+  },
+  updateGoal: async (id, data) => {
+    await updateGoal(id, data);
+    await get().loadGoals();
+  },
+  removeGoal: async (id) => {
+    await deleteGoalById(id);
+    await get().loadGoals();
+  },
+
   // ─── Analytics ────────────────────────────────────────────────────────────
   loadMonthData: async (month) => {
     const m = month || get().selectedMonth;
@@ -103,6 +191,17 @@ const useStore = create((set, get) => ({
     await get().loadMonthData();
   },
 
+  // ─── Settings ───────────────────────────────────────────────────────────
+  loadSettings: async () => {
+    const currency = await getSetting('currency');
+    const theme = await getSetting('theme');
+    set({ settings: { currency, theme } });
+  },
+  setSetting: async (key, value) => {
+    await setSetting(key, value);
+    await get().loadSettings();
+  },
+
   // ─── Load All ─────────────────────────────────────────────────────────────
   loadAll: async () => {
     set({ loading: true });
@@ -111,6 +210,7 @@ const useStore = create((set, get) => ({
       get().loadTransactions(month),
       get().loadSubscriptions(),
       get().loadBudgets(month),
+      get().loadCustomers(),
       get().loadMonthData(month),
     ]);
     set({ loading: false });
@@ -123,7 +223,12 @@ export const useLoadAll = () => useStore(useCallback((s) => s.loadAll, []));
 export const useLoadTransactions = () => useStore(useCallback((s) => s.loadTransactions, []));
 export const useLoadSubscriptions = () => useStore(useCallback((s) => s.loadSubscriptions, []));
 export const useLoadBudgets = () => useStore(useCallback((s) => s.loadBudgets, []));
+export const useLoadCustomers = () => useStore(useCallback((s) => s.loadCustomers, []));
 export const useLoadMonthData = () => useStore(useCallback((s) => s.loadMonthData, []));
 export const useLoadReportsData = () => useStore(useCallback((s) => s.loadReportsData, []));
+export const useLoadRecurringTransactions = () => useStore(useCallback((s) => s.loadRecurringTransactions, []));
+export const useLoadTags = () => useStore(useCallback((s) => s.loadTags, []));
+export const useLoadGoals = () => useStore(useCallback((s) => s.loadGoals, []));
+export const useLoadSettings = () => useStore(useCallback((s) => s.loadSettings, []));
 
 export default useStore;

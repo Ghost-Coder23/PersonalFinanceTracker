@@ -39,6 +39,53 @@ export const initDB = async () => {
       month TEXT NOT NULL,
       UNIQUE(category, month)
     );
+
+    CREATE TABLE IF NOT EXISTS customers (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      email TEXT,
+      phone TEXT,
+      notes TEXT,
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE TABLE IF NOT EXISTS recurring_transactions (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      type TEXT NOT NULL,
+      amount REAL NOT NULL,
+      category TEXT NOT NULL,
+      description TEXT DEFAULT '',
+      start_date TEXT NOT NULL,
+      frequency TEXT NOT NULL,
+      customer_id INTEGER,
+      FOREIGN KEY(customer_id) REFERENCES customers(id)
+    );
+
+    CREATE TABLE IF NOT EXISTS tags (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL UNIQUE
+    );
+
+    CREATE TABLE IF NOT EXISTS transaction_tags (
+      transaction_id INTEGER,
+      tag_id INTEGER,
+      PRIMARY KEY (transaction_id, tag_id),
+      FOREIGN KEY(transaction_id) REFERENCES transactions(id),
+      FOREIGN KEY(tag_id) REFERENCES tags(id)
+    );
+
+    CREATE TABLE IF NOT EXISTS goals (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      target_amount REAL NOT NULL,
+      current_amount REAL DEFAULT 0,
+      deadline TEXT
+    );
+
+    CREATE TABLE IF NOT EXISTS settings (
+      key TEXT PRIMARY KEY,
+      value TEXT
+    );
   `);
 
   return database;
@@ -129,6 +176,100 @@ export const deleteBudgetById = async (id) => {
   await db.runAsync('DELETE FROM budgets WHERE id = ?', [id]);
 };
 
+// ─── CUSTOMERS ──────────────────────────────────────────────────────────────
+
+export const getAllCustomers = async () => {
+  const db = getDB();
+  return await db.getAllAsync('SELECT * FROM customers ORDER BY name ASC');
+};
+
+export const insertCustomer = async ({ name, email, phone, notes }) => {
+  const db = getDB();
+  const result = await db.runAsync(
+    'INSERT INTO customers (name, email, phone, notes) VALUES (?, ?, ?, ?)',
+    [name, email || '', phone || '', notes || '']
+  );
+  return result.lastInsertRowId;
+};
+
+export const updateCustomer = async (id, { name, email, phone, notes }) => {
+  const db = getDB();
+  await db.runAsync(
+    'UPDATE customers SET name = ?, email = ?, phone = ?, notes = ? WHERE id = ?',
+    [name, email || '', phone || '', notes || '', id]
+  );
+};
+
+export const deleteCustomerById = async (id) => {
+  const db = getDB();
+  await db.runAsync('DELETE FROM customers WHERE id = ?', [id]);
+};
+
+// ─── RECURRING TRANSACTIONS ────────────────────────────────────────────────
+export const getAllRecurringTransactions = async () => {
+  const db = getDB();
+  return await db.getAllAsync('SELECT * FROM recurring_transactions ORDER BY start_date DESC');
+};
+export const insertRecurringTransaction = async (data) => {
+  const db = getDB();
+  const result = await db.runAsync(
+    'INSERT INTO recurring_transactions (type, amount, category, description, start_date, frequency, customer_id) VALUES (?, ?, ?, ?, ?, ?, ?)',
+    [data.type, parseFloat(data.amount), data.category, data.description || '', data.start_date, data.frequency, data.customer_id || null]
+  );
+  return result.lastInsertRowId;
+};
+export const deleteRecurringTransactionById = async (id) => {
+  const db = getDB();
+  await db.runAsync('DELETE FROM recurring_transactions WHERE id = ?', [id]);
+};
+// ─── TAGS ──────────────────────────────────────────────────────────────────
+export const getAllTags = async () => {
+  const db = getDB();
+  return await db.getAllAsync('SELECT * FROM tags ORDER BY name ASC');
+};
+export const insertTag = async (name) => {
+  const db = getDB();
+  const result = await db.runAsync('INSERT INTO tags (name) VALUES (?)', [name]);
+  return result.lastInsertRowId;
+};
+export const deleteTagById = async (id) => {
+  const db = getDB();
+  await db.runAsync('DELETE FROM tags WHERE id = ?', [id]);
+};
+// ─── GOALS ─────────────────────────────────────────────────────────────────
+export const getAllGoals = async () => {
+  const db = getDB();
+  return await db.getAllAsync('SELECT * FROM goals ORDER BY deadline ASC');
+};
+export const insertGoal = async (data) => {
+  const db = getDB();
+  const result = await db.runAsync(
+    'INSERT INTO goals (name, target_amount, current_amount, deadline) VALUES (?, ?, ?, ?)',
+    [data.name, parseFloat(data.target_amount), parseFloat(data.current_amount) || 0, data.deadline || null]
+  );
+  return result.lastInsertRowId;
+};
+export const updateGoal = async (id, data) => {
+  const db = getDB();
+  await db.runAsync(
+    'UPDATE goals SET name = ?, target_amount = ?, current_amount = ?, deadline = ? WHERE id = ?',
+    [data.name, parseFloat(data.target_amount), parseFloat(data.current_amount) || 0, data.deadline || null, id]
+  );
+};
+export const deleteGoalById = async (id) => {
+  const db = getDB();
+  await db.runAsync('DELETE FROM goals WHERE id = ?', [id]);
+};
+// ─── SETTINGS ──────────────────────────────────────────────────────────────
+export const getSetting = async (key) => {
+  const db = getDB();
+  const row = await db.getAllAsync('SELECT value FROM settings WHERE key = ?', [key]);
+  return row.length ? row[0].value : null;
+};
+export const setSetting = async (key, value) => {
+  const db = getDB();
+  await db.runAsync('INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)', [key, value]);
+};
 // ─── ANALYTICS ───────────────────────────────────────────────────────────────
 
 export const getMonthlyTotals = async (month) => {

@@ -13,6 +13,10 @@ import AddSubscriptionScreen from '../screens/AddSubscriptionScreen';
 import BudgetScreen from '../screens/BudgetScreen';
 import AddBudgetScreen from '../screens/AddBudgetScreen';
 import ReportsScreen from '../screens/ReportsScreen';
+import CustomersScreen from '../screens/CustomersScreen';
+import RecurringTransactionsScreen from '../screens/RecurringTransactionsScreen';
+import TagsScreen from '../screens/TagsScreen';
+import GoalsScreen from '../screens/GoalsScreen';
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
@@ -68,6 +72,38 @@ function ReportsStack() {
   );
 }
 
+function CustomersStack() {
+  return (
+    <Stack.Navigator screenOptions={stackOptions}>
+      <Stack.Screen name="Customers" component={CustomersScreen} options={{ title: 'Customers' }} />
+    </Stack.Navigator>
+  );
+}
+
+function RecurringStack() {
+  return (
+    <Stack.Navigator screenOptions={stackOptions}>
+      <Stack.Screen name="Recurring" component={RecurringTransactionsScreen} options={{ title: 'Recurring' }} />
+    </Stack.Navigator>
+  );
+}
+
+function TagsStack() {
+  return (
+    <Stack.Navigator screenOptions={stackOptions}>
+      <Stack.Screen name="Tags" component={TagsScreen} options={{ title: 'Tags' }} />
+    </Stack.Navigator>
+  );
+}
+
+function GoalsStack() {
+  return (
+    <Stack.Navigator screenOptions={stackOptions}>
+      <Stack.Screen name="Goals" component={GoalsScreen} options={{ title: 'Goals' }} />
+    </Stack.Navigator>
+  );
+}
+
 export default function AppNavigator() {
   return (
     <Tab.Navigator
@@ -84,6 +120,10 @@ export default function AppNavigator() {
             SubscriptionsTab: focused ? 'repeat' : 'repeat-outline',
             BudgetTab: focused ? 'wallet' : 'wallet-outline',
             ReportsTab: focused ? 'bar-chart' : 'bar-chart-outline',
+            CustomersTab: focused ? 'people' : 'people-outline',
+            RecurringTab: focused ? 'refresh' : 'refresh-outline',
+            TagsTab: focused ? 'pricetag' : 'pricetag-outline',
+            GoalsTab: focused ? 'flag' : 'flag-outline',
           };
           return <Ionicons name={icons[route.name]} size={size} color={color} />;
         },
@@ -94,6 +134,19 @@ export default function AppNavigator() {
       <Tab.Screen name="SubscriptionsTab" component={SubscriptionsStack} options={{ title: 'Subscriptions' }} />
       <Tab.Screen name="BudgetTab" component={BudgetStack} options={{ title: 'Budget' }} />
       <Tab.Screen name="ReportsTab" component={ReportsStack} options={{ title: 'Reports' }} />
+      <Tab.Screen
+        name="CustomersTab"
+        component={CustomersStack}
+        options={{
+          tabBarLabel: 'Customers',
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="people" color={color} size={size} />
+          ),
+        }}
+      />
+      <Tab.Screen name="RecurringTab" component={RecurringStack} options={{ title: 'Recurring' }} />
+      <Tab.Screen name="TagsTab" component={TagsStack} options={{ title: 'Tags' }} />
+      <Tab.Screen name="GoalsTab" component={GoalsStack} options={{ title: 'Goals' }} />
     </Tab.Navigator>
   );
 }

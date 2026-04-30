@@ -6,16 +6,17 @@ import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS } from '../utils/colors';
 import { formatCurrency } from '../utils/formatters';
-import useStore from '../store/useStore';
+import useStore, { useLoadSubscriptions } from '../store/useStore';
 import SubscriptionItem from '../components/SubscriptionItem';
 
 export default function SubscriptionsScreen({ navigation }) {
-  const { subscriptions, loadSubscriptions, removeSubscription, loading } = useStore();
+  const { subscriptions, removeSubscription, loading } = useStore();
+  const loadSubscriptions = useLoadSubscriptions();
 
   useFocusEffect(
     React.useCallback(() => {
       loadSubscriptions();
-    }, [])
+    }, [loadSubscriptions])
   );
 
   const totalMonthly = subscriptions.reduce((acc, sub) => {

@@ -6,21 +6,22 @@ import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS } from '../utils/colors';
 import { formatCurrency, getMonthLabel, getPrevMonth, getNextMonth } from '../utils/formatters';
-import useStore from '../store/useStore';
+import useStore, { useLoadBudgets, useLoadMonthData } from '../store/useStore';
 import BudgetProgress from '../components/BudgetProgress';
 
 export default function BudgetScreen({ navigation }) {
   const {
-    budgets, transactions, expensesByCategory, selectedMonth,
-    setSelectedMonth, loadBudgets, loadMonthData, loading,
-    removeBudget,
+    budgets, expensesByCategory, selectedMonth,
+    setSelectedMonth, loading, removeBudget,
   } = useStore();
+  const loadBudgets = useLoadBudgets();
+  const loadMonthData = useLoadMonthData();
 
   useFocusEffect(
     React.useCallback(() => {
       loadBudgets();
       loadMonthData();
-    }, [selectedMonth])
+    }, [selectedMonth, loadBudgets, loadMonthData])
   );
 
   // Build spent map from expenses by category

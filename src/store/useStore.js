@@ -1,6 +1,6 @@
 import { create } from 'zustand';
+import { useCallback } from 'react';
 import {
-  getAllTransactions,
   getTransactionsByMonth,
   insertTransaction,
   deleteTransactionById,
@@ -116,5 +116,14 @@ const useStore = create((set, get) => ({
     set({ loading: false });
   },
 }));
+
+// Stable selector hooks — these return the same function reference every render
+// so they are safe to use as useEffect / useFocusEffect dependencies
+export const useLoadAll = () => useStore(useCallback((s) => s.loadAll, []));
+export const useLoadTransactions = () => useStore(useCallback((s) => s.loadTransactions, []));
+export const useLoadSubscriptions = () => useStore(useCallback((s) => s.loadSubscriptions, []));
+export const useLoadBudgets = () => useStore(useCallback((s) => s.loadBudgets, []));
+export const useLoadMonthData = () => useStore(useCallback((s) => s.loadMonthData, []));
+export const useLoadReportsData = () => useStore(useCallback((s) => s.loadReportsData, []));
 
 export default useStore;

@@ -1,13 +1,13 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import {
   View, Text, ScrollView, StyleSheet, TouchableOpacity,
-  RefreshControl, StatusBar,
+  RefreshControl,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS } from '../utils/colors';
-import { formatCurrency, getMonthLabel, getCurrentMonth } from '../utils/formatters';
-import useStore from '../store/useStore';
+import { formatCurrency, getMonthLabel } from '../utils/formatters';
+import useStore, { useLoadAll } from '../store/useStore';
 import SummaryCard from '../components/SummaryCard';
 import TransactionItem from '../components/TransactionItem';
 import SubscriptionItem from '../components/SubscriptionItem';
@@ -15,13 +15,14 @@ import SubscriptionItem from '../components/SubscriptionItem';
 export default function DashboardScreen({ navigation }) {
   const {
     transactions, subscriptions, monthlyTotals,
-    selectedMonth, loading, loadAll, removeTransaction, removeSubscription,
+    selectedMonth, loading, removeTransaction, removeSubscription,
   } = useStore();
+  const loadAll = useLoadAll();
 
   useFocusEffect(
     React.useCallback(() => {
       loadAll();
-    }, [])
+    }, [loadAll])
   );
 
   const balance = monthlyTotals.income - monthlyTotals.expense;

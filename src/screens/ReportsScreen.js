@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import {
   View, Text, ScrollView, StyleSheet, Dimensions, RefreshControl,
 } from 'react-native';
@@ -7,7 +7,7 @@ import { BarChart, PieChart } from 'react-native-chart-kit';
 import { COLORS } from '../utils/colors';
 import { getCategoryById } from '../utils/categories';
 import { formatCurrency, getMonthLabel } from '../utils/formatters';
-import useStore from '../store/useStore';
+import useStore, { useLoadReportsData } from '../store/useStore';
 import dayjs from 'dayjs';
 
 const screenWidth = Dimensions.get('window').width - 32;
@@ -27,13 +27,14 @@ const chartConfig = {
 export default function ReportsScreen() {
   const {
     selectedMonth, monthlyTotals, expensesByCategory,
-    last6MonthsTotals, loading, loadReportsData,
+    last6MonthsTotals, loading,
   } = useStore();
+  const loadReportsData = useLoadReportsData();
 
   useFocusEffect(
     React.useCallback(() => {
       loadReportsData();
-    }, [selectedMonth])
+    }, [selectedMonth, loadReportsData])
   );
 
   // Build last 6 months bar chart data

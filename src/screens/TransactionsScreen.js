@@ -7,20 +7,21 @@ import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS } from '../utils/colors';
 import { formatCurrency, getMonthLabel, getPrevMonth, getNextMonth } from '../utils/formatters';
-import useStore from '../store/useStore';
+import useStore, { useLoadTransactions } from '../store/useStore';
 import TransactionItem from '../components/TransactionItem';
 
 export default function TransactionsScreen({ navigation }) {
-  const [filter, setFilter] = useState('all'); // 'all' | 'income' | 'expense'
+  const [filter, setFilter] = useState('all');
   const {
     transactions, monthlyTotals, selectedMonth,
-    setSelectedMonth, loadTransactions, removeTransaction, loading,
+    setSelectedMonth, removeTransaction, loading,
   } = useStore();
+  const loadTransactions = useLoadTransactions();
 
   useFocusEffect(
     React.useCallback(() => {
       loadTransactions();
-    }, [selectedMonth])
+    }, [selectedMonth, loadTransactions])
   );
 
   const filtered = transactions.filter((t) => {

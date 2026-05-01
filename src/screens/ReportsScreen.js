@@ -9,6 +9,7 @@ import { getCategoryById } from '../utils/categories';
 import { formatCurrency, getMonthLabel } from '../utils/formatters';
 import useStore, { useLoadReportsData } from '../store/useStore';
 import dayjs from 'dayjs';
+import { SpendingPieChart, IncomeExpenseLineChart } from '../components/AnalyticsCharts';
 
 const screenWidth = Dimensions.get('window').width - 32;
 
@@ -209,6 +210,15 @@ export default function ReportsScreen() {
           })}
         </View>
       )}
+
+      <Text style={styles.header}>Spending by Category</Text>
+      <SpendingPieChart data={expensesByCategory} />
+      <Text style={styles.header}>Income vs Expense (Last 6 Months)</Text>
+      <IncomeExpenseLineChart data={months6.map((month, i) => ({
+        month,
+        income: incomeData[i],
+        expense: expenseData[i],
+      }))} />
     </ScrollView>
   );
 }
@@ -286,4 +296,11 @@ const styles = StyleSheet.create({
   catAmounts: { alignItems: 'flex-end' },
   catAmount: { fontSize: 13, fontWeight: '800', color: COLORS.text },
   catPct: { fontSize: 11, color: COLORS.textSecondary, fontWeight: '500' },
+  header: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: COLORS.text,
+    marginTop: 24,
+    marginBottom: 12,
+  },
 });

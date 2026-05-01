@@ -8,6 +8,7 @@ import { COLORS } from '../utils/colors';
 import { formatCurrency } from '../utils/formatters';
 import useStore, { useLoadSubscriptions } from '../store/useStore';
 import SubscriptionItem from '../components/SubscriptionItem';
+import { scheduleNotification } from '../utils/notifications';
 
 export default function SubscriptionsScreen({ navigation }) {
   const { subscriptions, removeSubscription, loading } = useStore();
@@ -27,6 +28,14 @@ export default function SubscriptionsScreen({ navigation }) {
   }, 0);
 
   const totalYearly = totalMonthly * 12;
+
+  const handleScheduleNotification = (sub) => {
+    scheduleNotification({
+      title: `Upcoming Renewal: ${sub.name}`,
+      body: `Your subscription for ${sub.name} renews on ${sub.next_renewal}`,
+      date: sub.next_renewal,
+    });
+  };
 
   return (
     <View style={styles.container}>
@@ -54,7 +63,11 @@ export default function SubscriptionsScreen({ navigation }) {
         contentContainerStyle={styles.list}
         refreshControl={<RefreshControl refreshing={loading} onRefresh={loadSubscriptions} />}
         renderItem={({ item }) => (
-          <SubscriptionItem item={item} onDelete={removeSubscription} />
+          <SubscriptionItem
+            subscription={item}
+            onDelete={() => removeSubscription(item.id)}
+            onNotify={() => handleScheduleNotification(item)}
+          />
         )}
         ListEmptyComponent={
           <View style={styles.empty}>

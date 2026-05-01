@@ -5,7 +5,8 @@ import { COLORS } from '../utils/colors';
 import { getCategoryById } from '../utils/categories';
 import { formatCurrency, formatDate, getDaysUntil } from '../utils/formatters';
 
-export default function SubscriptionItem({ item, onDelete }) {
+export default function SubscriptionItem({ subscription, onDelete, onNotify }) {
+  const item = subscription;
   const category = getCategoryById(item.category, 'subscription');
   const daysUntil = getDaysUntil(item.next_renewal);
   const isUrgent = daysUntil <= 3;
@@ -55,9 +56,16 @@ export default function SubscriptionItem({ item, onDelete }) {
           {formatCurrency(item.amount)}
           <Text style={styles.cycle}>{cycleLabel}</Text>
         </Text>
-        <TouchableOpacity onPress={handleDelete} style={styles.deleteBtn}>
-          <Ionicons name="trash-outline" size={16} color={COLORS.textSecondary} />
-        </TouchableOpacity>
+        <View style={styles.actions}>
+          <TouchableOpacity onPress={handleDelete} style={styles.actionBtn}>
+            <Ionicons name="trash-outline" size={16} color={COLORS.textSecondary} />
+          </TouchableOpacity>
+          {onNotify && (
+            <TouchableOpacity onPress={() => onNotify(item)} style={styles.actionBtn}>
+              <Ionicons name="notifications-outline" size={16} color={COLORS.primary} />
+            </TouchableOpacity>
+          )}
+        </View>
       </View>
     </View>
   );
@@ -126,5 +134,12 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     color: COLORS.textSecondary,
   },
-  deleteBtn: { padding: 4 },
+  actions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  actionBtn: {
+    padding: 4,
+    marginLeft: 8,
+  },
 });

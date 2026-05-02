@@ -5,9 +5,9 @@ import { COLORS } from '../utils/colors';
 import { getCategoryById } from '../utils/categories';
 import { formatCurrency, formatDate, getDaysUntil } from '../utils/formatters';
 
-export default function SubscriptionItem({ subscription, onDelete, onNotify }) {
-  if (!subscription) return null;
-  const item = subscription;
+export default function SubscriptionItem({ subscription, item: itemProp, onDelete, onNotify }) {
+  const item = subscription || itemProp;
+  if (!item) return null;
   const category = getCategoryById(item.category, 'subscription');
   const daysUntil = getDaysUntil(item.next_renewal);
   const isUrgent = daysUntil <= 3;

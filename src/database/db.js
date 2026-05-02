@@ -1,8 +1,27 @@
 import * as SQLite from 'expo-sqlite';
+import dayjs from 'dayjs';
 
 let database = null;
 
 export const getDB = () => database;
+
+const addColumnIfMissing = async (table, columnDefinition) => {
+  const columnName = columnDefinition.trim().split(/\s+/)[0];
+  const columns = await database.getAllAsync(`PRAGMA table_info(${table})`);
+  const exists = columns.some((column) => column.name === columnName);
+  if (!exists) {
+    await database.execAsync(`ALTER TABLE ${table} ADD COLUMN ${columnDefinition}`);
+  }
+};
+
+const getNextRecurringDate = (date, frequency) => {
+  const current = dayjs(date);
+  if (frequency === 'daily') return current.add(1, 'day');
+  if (frequency === 'weekly') return current.add(1, 'week');
+  if (frequency === 'quarterly') return current.add(3, 'month');
+  if (frequency === 'yearly') return current.add(1, 'year');
+  return current.add(1, 'month');
+};
 
 export const initDB = async () => {
   database = await SQLite.openDatabaseAsync('financeapp.db');
@@ -57,6 +76,8 @@ export const initDB = async () => {
       description TEXT DEFAULT '',
       start_date TEXT NOT NULL,
       frequency TEXT NOT NULL,
+      next_due_date TEXT,
+      is_active INTEGER DEFAULT 1,
       customer_id INTEGER,
       FOREIGN KEY(customer_id) REFERENCES customers(id)
     );
@@ -87,6 +108,12 @@ export const initDB = async () => {
       value TEXT
     );
   `);
+
+  await addColumnIfMissing('recurring_transactions', 'next_due_date TEXT');
+  await addColumnIfMissing('recurring_transactions', 'is_active INTEGER DEFAULT 1');
+  await database.runAsync(
+    'UPDATE recurring_transactions SET next_due_date = start_date WHERE next_due_date IS NULL'
+  );
 
   return database;
 };
@@ -162,6 +189,11 @@ export const getBudgetsByMonth = async (month) => {
   return await db.getAllAsync('SELECT * FROM budgets WHERE month = ?', [month]);
 };
 
+export const getAllBudgets = async () => {
+  const db = getDB();
+  return await db.getAllAsync('SELECT * FROM budgets ORDER BY month DESC, category ASC');
+};
+
 export const insertBudget = async ({ category, amount, month }) => {
   const db = getDB();
   const result = await db.runAsync(
@@ -208,19 +240,77 @@ export const deleteCustomerById = async (id) => {
 // ─── RECURRING TRANSACTIONS ────────────────────────────────────────────────
 export const getAllRecurringTransactions = async () => {
   const db = getDB();
-  return await db.getAllAsync('SELECT * FROM recurring_transactions ORDER BY start_date DESC');
+  return await db.getAllAsync(
+    `SELECT * FROM recurring_transactions
+     ORDER BY COALESCE(next_due_date, start_date) ASC`
+  );
 };
 export const insertRecurringTransaction = async (data) => {
   const db = getDB();
+  const startDate = data.start_date;
   const result = await db.runAsync(
-    'INSERT INTO recurring_transactions (type, amount, category, description, start_date, frequency, customer_id) VALUES (?, ?, ?, ?, ?, ?, ?)',
-    [data.type, parseFloat(data.amount), data.category, data.description || '', data.start_date, data.frequency, data.customer_id || null]
+    `INSERT INTO recurring_transactions
+      (type, amount, category, description, start_date, frequency, next_due_date, is_active, customer_id)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [
+      data.type,
+      parseFloat(data.amount),
+      data.category,
+      data.description || '',
+      startDate,
+      data.frequency,
+      data.next_due_date || startDate,
+      data.is_active === false ? 0 : 1,
+      data.customer_id || null,
+    ]
   );
   return result.lastInsertRowId;
 };
 export const deleteRecurringTransactionById = async (id) => {
   const db = getDB();
   await db.runAsync('DELETE FROM recurring_transactions WHERE id = ?', [id]);
+};
+
+export const generateDueRecurringTransactions = async () => {
+  const db = getDB();
+  const today = dayjs().format('YYYY-MM-DD');
+  const dueItems = await db.getAllAsync(
+    `SELECT * FROM recurring_transactions
+     WHERE is_active = 1
+       AND date(COALESCE(next_due_date, start_date)) <= date(?)
+     ORDER BY COALESCE(next_due_date, start_date) ASC`,
+    [today]
+  );
+
+  let generatedCount = 0;
+
+  for (const item of dueItems) {
+    let dueDate = dayjs(item.next_due_date || item.start_date);
+    let safetyCount = 0;
+
+    while (!dueDate.isAfter(dayjs(today), 'day') && safetyCount < 36) {
+      await db.runAsync(
+        'INSERT INTO transactions (type, amount, category, description, date) VALUES (?, ?, ?, ?, ?)',
+        [
+          item.type,
+          parseFloat(item.amount),
+          item.category,
+          item.description || `Recurring ${item.type}`,
+          dueDate.format('YYYY-MM-DD'),
+        ]
+      );
+      generatedCount += 1;
+      safetyCount += 1;
+      dueDate = getNextRecurringDate(dueDate, item.frequency);
+    }
+
+    await db.runAsync(
+      'UPDATE recurring_transactions SET next_due_date = ? WHERE id = ?',
+      [dueDate.format('YYYY-MM-DD'), item.id]
+    );
+  }
+
+  return generatedCount;
 };
 // ─── TAGS ──────────────────────────────────────────────────────────────────
 export const getAllTags = async () => {

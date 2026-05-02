@@ -6,7 +6,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS } from '../utils/colors';
 import { EXPENSE_CATEGORIES } from '../utils/categories';
-import { getMonthLabel } from '../utils/formatters';
+import { getCurrencySymbol, getMonthLabel } from '../utils/formatters';
 import useStore from '../store/useStore';
 
 export default function AddBudgetScreen({ route, navigation }) {
@@ -81,7 +81,7 @@ export default function AddBudgetScreen({ route, navigation }) {
       <View style={styles.card}>
         <Text style={styles.label}>Budget Limit *</Text>
         <View style={styles.amountRow}>
-          <Text style={styles.currencySymbol}>$</Text>
+          <Text style={styles.currencySymbol}>{getCurrencySymbol()}</Text>
           <TextInput
             style={styles.amountInput}
             value={amount}

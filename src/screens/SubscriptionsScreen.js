@@ -1,6 +1,6 @@
 import React from 'react';
 import {
-  View, Text, FlatList, StyleSheet, TouchableOpacity, RefreshControl,
+  View, Text, FlatList, StyleSheet, TouchableOpacity, RefreshControl, Alert,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
@@ -8,10 +8,10 @@ import { COLORS } from '../utils/colors';
 import { formatCurrency } from '../utils/formatters';
 import useStore, { useLoadSubscriptions } from '../store/useStore';
 import SubscriptionItem from '../components/SubscriptionItem';
-import { scheduleNotification } from '../utils/notifications';
+import { scheduleSubscriptionReminder } from '../utils/notifications';
 
 export default function SubscriptionsScreen({ navigation }) {
-  const { subscriptions, removeSubscription, loading } = useStore();
+  const { subscriptions, removeSubscription, loading, settings } = useStore();
   const loadSubscriptions = useLoadSubscriptions();
 
   useFocusEffect(
@@ -24,17 +24,24 @@ export default function SubscriptionsScreen({ navigation }) {
     if (sub.billing_cycle === 'monthly') return acc + sub.amount;
     if (sub.billing_cycle === 'yearly') return acc + sub.amount / 12;
     if (sub.billing_cycle === 'weekly') return acc + sub.amount * 4;
+    if (sub.billing_cycle === 'quarterly') return acc + sub.amount / 3;
     return acc + sub.amount;
   }, 0);
 
   const totalYearly = totalMonthly * 12;
 
-  const handleScheduleNotification = (sub) => {
-    scheduleNotification({
-      title: `Upcoming Renewal: ${sub.name}`,
-      body: `Your subscription for ${sub.name} renews on ${sub.next_renewal}`,
-      date: sub.next_renewal,
-    });
+  const handleScheduleNotification = async (sub) => {
+    if (settings.notifications === 'disabled') {
+      Alert.alert('Notifications Disabled', 'Enable notifications in Settings first.');
+      return;
+    }
+
+    try {
+      await scheduleSubscriptionReminder(sub);
+      Alert.alert('Reminder Scheduled', `${sub.name} reminder is scheduled.`);
+    } catch (err) {
+      Alert.alert('Reminder Not Scheduled', err.message || 'Could not schedule this reminder.');
+    }
   };
 
   return (

@@ -4,17 +4,23 @@ import { NavigationContainer } from '@react-navigation/native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { StatusBar } from 'expo-status-bar';
 import { initDB } from './src/database/db';
-import AppNavigator from './src/navigation/AppNavigator';
 import { COLORS } from './src/utils/colors';
+import { configureNotifications } from './src/utils/notifications';
+import useStore from './src/store/useStore';
 
 export default function App() {
   const [dbReady, setDbReady] = useState(false);
+  const [Navigator, setNavigator] = useState(null);
   const [error, setError] = useState(null);
 
   useEffect(() => {
     const setup = async () => {
       try {
         await initDB();
+        await configureNotifications();
+        await useStore.getState().loadSettings();
+        const AppNavigator = require('./src/navigation/AppNavigator').default;
+        setNavigator(() => AppNavigator);
         setDbReady(true);
       } catch (err) {
         console.error('DB init error:', err);
@@ -32,7 +38,7 @@ export default function App() {
     );
   }
 
-  if (!dbReady) {
+  if (!dbReady || !Navigator) {
     return (
       <View style={styles.center}>
         <ActivityIndicator size="large" color={COLORS.primary} />
@@ -44,8 +50,8 @@ export default function App() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <NavigationContainer>
-        <StatusBar style="light" />
-        <AppNavigator />
+        <StatusBar style="auto" />
+        <Navigator />
       </NavigationContainer>
     </GestureHandlerRootView>
   );

@@ -7,7 +7,7 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS } from '../utils/colors';
 import { EXPENSE_CATEGORIES, INCOME_CATEGORIES } from '../utils/categories';
-import { formatDate, getCurrentDate } from '../utils/formatters';
+import { formatDate, getCurrencySymbol } from '../utils/formatters';
 import useStore from '../store/useStore';
 import dayjs from 'dayjs';
 
@@ -73,7 +73,7 @@ export default function AddTransactionScreen({ route, navigation }) {
       <View style={styles.card}>
         <Text style={styles.fieldLabel}>Amount *</Text>
         <View style={styles.amountRow}>
-          <Text style={styles.currencySymbol}>$</Text>
+          <Text style={styles.currencySymbol}>{getCurrencySymbol()}</Text>
           <TextInput
             style={styles.amountInput}
             value={amount}

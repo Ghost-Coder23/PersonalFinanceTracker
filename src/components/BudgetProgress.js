@@ -43,7 +43,7 @@ export default function BudgetProgress({ budget, spent }) {
         </Text>
         <Text style={styles.remaining}>
           {isOver
-            ? `$${(spent - budget.amount).toFixed(2)} over`
+            ? `${formatCurrency(spent - budget.amount)} over`
             : `${formatCurrency(budget.amount - spent)} left`}
         </Text>
       </View>

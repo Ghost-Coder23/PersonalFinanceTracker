@@ -1,7 +1,29 @@
 import dayjs from 'dayjs';
 
-export const formatCurrency = (amount, symbol = '$') => {
+export const CURRENCIES = [
+  { code: 'USD', symbol: '$', label: 'US Dollar' },
+  { code: 'EUR', symbol: '€', label: 'Euro' },
+  { code: 'GBP', symbol: '£', label: 'British Pound' },
+  { code: 'JPY', symbol: '¥', label: 'Japanese Yen' },
+  { code: 'NGN', symbol: '₦', label: 'Nigerian Naira' },
+];
+
+let activeCurrency = 'USD';
+
+export const setActiveCurrency = (currency = 'USD') => {
+  activeCurrency = currency;
+};
+
+export const getActiveCurrency = () => activeCurrency;
+
+export const getCurrencySymbol = (currency = activeCurrency) => {
+  const found = CURRENCIES.find((item) => item.code === currency);
+  return found?.symbol || currency || '$';
+};
+
+export const formatCurrency = (amount, currencyOrSymbol = activeCurrency) => {
   const num = parseFloat(amount) || 0;
+  const symbol = getCurrencySymbol(currencyOrSymbol);
   return `${symbol}${num.toLocaleString('en-US', {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
@@ -25,7 +47,7 @@ export const isThisMonth = (dateStr) =>
   dayjs(dateStr).format('YYYY-MM') === getCurrentMonth();
 
 export const getDaysUntil = (dateStr) =>
-  dayjs(dateStr).diff(dayjs(), 'day');
+  dayjs(dateStr).startOf('day').diff(dayjs().startOf('day'), 'day');
 
 export const getPrevMonth = (monthStr) =>
   dayjs(monthStr + '-01').subtract(1, 'month').format('YYYY-MM');

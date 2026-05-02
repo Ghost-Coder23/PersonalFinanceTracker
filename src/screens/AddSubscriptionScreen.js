@@ -7,7 +7,7 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS } from '../utils/colors';
 import { SUBSCRIPTION_CATEGORIES } from '../utils/categories';
-import { formatDate } from '../utils/formatters';
+import { formatDate, getCurrencySymbol } from '../utils/formatters';
 import useStore from '../store/useStore';
 import dayjs from 'dayjs';
 
@@ -75,7 +75,7 @@ export default function AddSubscriptionScreen({ navigation }) {
       <View style={styles.card}>
         <Text style={styles.label}>Amount *</Text>
         <View style={styles.amountRow}>
-          <Text style={styles.currencySymbol}>$</Text>
+          <Text style={styles.currencySymbol}>{getCurrencySymbol()}</Text>
           <TextInput
             style={styles.amountInput}
             value={amount}

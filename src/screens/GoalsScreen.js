@@ -3,6 +3,7 @@ import { View, Text, FlatList, TouchableOpacity, TextInput, Modal, Alert } from 
 import { COLORS } from '../utils/colors';
 import useStore from '../store/useStore';
 import { standardStyles } from '../utils/standardStyles';
+import { formatCurrency } from '../utils/formatters';
 
 export default function GoalsScreen() {
   const { goals, loadGoals, addGoal, updateGoal, removeGoal } = useStore();
@@ -47,7 +48,9 @@ export default function GoalsScreen() {
         renderItem={({ item }) => (
           <TouchableOpacity style={standardStyles.card} onPress={() => openModal(item)}>
             <Text style={[standardStyles.header, { fontSize: 16 }]}>{item.name}</Text>
-            <Text style={standardStyles.label}>Target: ${item.target_amount} | Current: ${item.current_amount}</Text>
+            <Text style={standardStyles.label}>
+              Target: {formatCurrency(item.target_amount)} | Current: {formatCurrency(item.current_amount)}
+            </Text>
             <Text style={standardStyles.label}>Deadline: {item.deadline}</Text>
             <TouchableOpacity style={[standardStyles.button, { backgroundColor: COLORS.expense }]} onPress={() => removeGoal(item.id)}>
               <Text style={standardStyles.buttonText}>Delete</Text>

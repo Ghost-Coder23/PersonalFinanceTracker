@@ -27,7 +27,7 @@ export function SpendingPieChart({ data }) {
 
 export function IncomeExpenseLineChart({ data }) {
   if (!data || !data.length) return <Text>No data</Text>;
-  const months = data.map(d => d.month);
+  const months = data.map(d => d.label || d.month);
   const income = data.map(d => d.income || 0);
   const expense = data.map(d => d.expense || 0);
   return (
@@ -40,13 +40,13 @@ export function IncomeExpenseLineChart({ data }) {
         ],
         legend: ['Income', 'Expense'],
       }}
-      width={Dimensions.get('window').width - 32}
+      width={Dimensions.get('window').width - 64}
       height={220}
       chartConfig={{
         backgroundColor: '#fff',
         backgroundGradientFrom: '#fff',
         backgroundGradientTo: '#fff',
-        decimalPlaces: 2,
+        decimalPlaces: 0,
         color: (opacity = 1) => `rgba(25, 118, 210, ${opacity})`,
         labelColor: () => '#333',
       }}

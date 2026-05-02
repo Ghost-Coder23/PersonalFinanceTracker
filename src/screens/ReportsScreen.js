@@ -9,7 +9,7 @@ import { getCategoryById } from '../utils/categories';
 import { formatCurrency, getMonthLabel } from '../utils/formatters';
 import useStore, { useLoadReportsData } from '../store/useStore';
 import dayjs from 'dayjs';
-import { SpendingPieChart, IncomeExpenseLineChart } from '../components/AnalyticsCharts';
+import { IncomeExpenseLineChart } from '../components/AnalyticsCharts';
 
 const screenWidth = Dimensions.get('window').width - 32;
 
@@ -28,14 +28,14 @@ const chartConfig = {
 export default function ReportsScreen() {
   const {
     selectedMonth, monthlyTotals, expensesByCategory,
-    last6MonthsTotals, loading,
+    last6MonthsTotals, loading, budgets, subscriptions,
   } = useStore();
   const loadReportsData = useLoadReportsData();
 
   useFocusEffect(
     React.useCallback(() => {
       loadReportsData();
-    }, [loadReportsData]) // removed selectedMonth from deps
+    }, [loadReportsData])
   );
 
   // Build last 6 months bar chart data
@@ -54,6 +54,18 @@ export default function ReportsScreen() {
   });
 
   const barLabels = months6.map((m) => dayjs(m + '-01').format('MMM'));
+  const currentIncome = incomeData[incomeData.length - 1] || 0;
+  const previousIncome = incomeData[incomeData.length - 2] || 0;
+  const currentExpense = expenseData[expenseData.length - 1] || 0;
+  const previousExpense = expenseData[expenseData.length - 2] || 0;
+
+  const getChangeLabel = (current, previous) => {
+    if (!previous && !current) return 'No activity yet';
+    if (!previous) return 'New activity';
+    const change = ((current - previous) / previous) * 100;
+    const prefix = change > 0 ? '+' : '';
+    return `${prefix}${change.toFixed(1)}% vs last month`;
+  };
 
   // Pie chart data for expenses by category
   const pieColors = [
@@ -76,6 +88,24 @@ export default function ReportsScreen() {
   const balance = monthlyTotals.income - monthlyTotals.expense;
   const savingsRate = monthlyTotals.income > 0
     ? ((balance / monthlyTotals.income) * 100).toFixed(1)
+    : '0.0';
+
+  const spentMap = expensesByCategory.reduce((acc, item) => {
+    acc[item.category] = item.total;
+    return acc;
+  }, {});
+  const totalBudget = budgets.reduce((acc, budget) => acc + budget.amount, 0);
+  const budgetSpend = budgets.reduce((acc, budget) => acc + (spentMap[budget.category] || 0), 0);
+  const budgetUsage = totalBudget > 0 ? Math.min((budgetSpend / totalBudget) * 100, 999).toFixed(0) : '0';
+  const monthlySubscriptionCost = subscriptions.reduce((acc, sub) => {
+    if (sub.billing_cycle === 'monthly') return acc + sub.amount;
+    if (sub.billing_cycle === 'yearly') return acc + sub.amount / 12;
+    if (sub.billing_cycle === 'weekly') return acc + sub.amount * 4;
+    if (sub.billing_cycle === 'quarterly') return acc + sub.amount / 3;
+    return acc + sub.amount;
+  }, 0);
+  const subscriptionImpact = monthlyTotals.expense > 0
+    ? ((monthlySubscriptionCost / monthlyTotals.expense) * 100).toFixed(1)
     : '0.0';
 
   return (
@@ -114,6 +144,49 @@ export default function ReportsScreen() {
           <Text style={styles.statLabel}>Savings Rate</Text>
           <Text style={[styles.statValue, { color: COLORS.primary }]}>{savingsRate}%</Text>
         </View>
+      </View>
+
+      {/* Insights */}
+      <View style={styles.insightsGrid}>
+        <View style={styles.insightCard}>
+          <Text style={styles.insightLabel}>Income Trend</Text>
+          <Text style={[styles.insightValue, { color: COLORS.income }]}>
+            {getChangeLabel(currentIncome, previousIncome)}
+          </Text>
+        </View>
+        <View style={styles.insightCard}>
+          <Text style={styles.insightLabel}>Expense Trend</Text>
+          <Text style={[styles.insightValue, { color: COLORS.expense }]}>
+            {getChangeLabel(currentExpense, previousExpense)}
+          </Text>
+        </View>
+        <View style={styles.insightCard}>
+          <Text style={styles.insightLabel}>Budget Used</Text>
+          <Text style={[styles.insightValue, { color: budgetSpend > totalBudget && totalBudget > 0 ? COLORS.danger : COLORS.primary }]}>
+            {budgetUsage}%
+          </Text>
+        </View>
+        <View style={styles.insightCard}>
+          <Text style={styles.insightLabel}>Subs Impact</Text>
+          <Text style={[styles.insightValue, { color: COLORS.subscription }]}>
+            {subscriptionImpact}%
+          </Text>
+        </View>
+      </View>
+
+      {/* Combined Trend */}
+      <View style={styles.chartCard}>
+        <Text style={styles.chartTitle}>Income vs Expense</Text>
+        {incomeData.some((v) => v > 0) || expenseData.some((v) => v > 0) ? (
+          <IncomeExpenseLineChart data={months6.map((month, i) => ({
+            month,
+            label: dayjs(`${month}-01`).format('MMM'),
+            income: incomeData[i],
+            expense: expenseData[i],
+          }))} />
+        ) : (
+          <View style={styles.noData}><Text style={styles.noDataText}>No trend data yet</Text></View>
+        )}
       </View>
 
       {/* 6-Month Income Chart */}
@@ -210,15 +283,6 @@ export default function ReportsScreen() {
           })}
         </View>
       )}
-
-      <Text style={styles.header}>Spending by Category</Text>
-      <SpendingPieChart data={expensesByCategory} />
-      <Text style={styles.header}>Income vs Expense (Last 6 Months)</Text>
-      <IncomeExpenseLineChart data={months6.map((month, i) => ({
-        month,
-        income: incomeData[i],
-        expense: expenseData[i],
-      }))} />
     </ScrollView>
   );
 }
@@ -253,6 +317,31 @@ const styles = StyleSheet.create({
   statIcon: { fontSize: 24, marginBottom: 8 },
   statLabel: { fontSize: 11, color: COLORS.textSecondary, fontWeight: '600', marginBottom: 4 },
   statValue: { fontSize: 18, fontWeight: '900' },
+  insightsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+    marginBottom: 20,
+  },
+  insightCard: {
+    width: (Dimensions.get('window').width - 52) / 2,
+    backgroundColor: COLORS.card,
+    borderRadius: 14,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+  },
+  insightLabel: {
+    fontSize: 11,
+    color: COLORS.textSecondary,
+    fontWeight: '700',
+    marginBottom: 6,
+    textTransform: 'uppercase',
+  },
+  insightValue: {
+    fontSize: 15,
+    fontWeight: '900',
+  },
   chartCard: {
     backgroundColor: COLORS.card,
     borderRadius: 16,
@@ -296,11 +385,4 @@ const styles = StyleSheet.create({
   catAmounts: { alignItems: 'flex-end' },
   catAmount: { fontSize: 13, fontWeight: '800', color: COLORS.text },
   catPct: { fontSize: 11, color: COLORS.textSecondary, fontWeight: '500' },
-  header: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: COLORS.text,
-    marginTop: 24,
-    marginBottom: 12,
-  },
 });

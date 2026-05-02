@@ -6,7 +6,7 @@ import {
 import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS } from '../utils/colors';
-import { formatCurrency, getMonthLabel } from '../utils/formatters';
+import { formatCurrency, getDaysUntil, getMonthLabel } from '../utils/formatters';
 import useStore, { useLoadAll } from '../store/useStore';
 import SummaryCard from '../components/SummaryCard';
 import TransactionItem from '../components/TransactionItem';
@@ -14,7 +14,7 @@ import SubscriptionItem from '../components/SubscriptionItem';
 
 export default function DashboardScreen({ navigation }) {
   const {
-    transactions, subscriptions, monthlyTotals,
+    transactions, subscriptions, recurringTransactions, monthlyTotals,
     selectedMonth, loading, removeTransaction, removeSubscription,
   } = useStore();
   const loadAll = useLoadAll();
@@ -28,11 +28,15 @@ export default function DashboardScreen({ navigation }) {
   const balance = monthlyTotals.income - monthlyTotals.expense;
   const recentTransactions = transactions.slice(0, 5);
   const upcomingSubscriptions = subscriptions.slice(0, 3);
+  const upcomingRecurring = recurringTransactions
+    .filter((item) => item.is_active !== 0)
+    .slice(0, 3);
 
   const totalMonthlySubscriptions = subscriptions.reduce((acc, sub) => {
     if (sub.billing_cycle === 'monthly') return acc + sub.amount;
     if (sub.billing_cycle === 'yearly') return acc + sub.amount / 12;
     if (sub.billing_cycle === 'weekly') return acc + sub.amount * 4;
+    if (sub.billing_cycle === 'quarterly') return acc + sub.amount / 3;
     return acc + sub.amount;
   }, 0);
 
@@ -100,7 +104,7 @@ export default function DashboardScreen({ navigation }) {
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.quickBtn, { backgroundColor: COLORS.subscriptionLight }]}
-            onPress={() => navigation.navigate('SubscriptionsTab', { screen: 'AddSubscription' })}
+            onPress={() => navigation.navigate('ManageTab', { screen: 'AddSubscription' })}
           >
             <Ionicons name="repeat" size={22} color={COLORS.subscription} />
             <Text style={[styles.quickBtnText, { color: COLORS.subscription }]}>Add Sub</Text>
@@ -133,13 +137,56 @@ export default function DashboardScreen({ navigation }) {
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Upcoming Renewals</Text>
-            <TouchableOpacity onPress={() => navigation.navigate('SubscriptionsTab')}>
+            <TouchableOpacity onPress={() => navigation.navigate('ManageTab', { screen: 'Subscriptions' })}>
               <Text style={styles.seeAll}>See all</Text>
             </TouchableOpacity>
           </View>
           {upcomingSubscriptions.map((item) => (
-            <SubscriptionItem key={item.id} item={item} onDelete={removeSubscription} />
+            <SubscriptionItem key={item.id} subscription={item} onDelete={removeSubscription} />
           ))}
+        </View>
+      )}
+
+      {upcomingRecurring.length > 0 && (
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Upcoming Recurring</Text>
+            <TouchableOpacity onPress={() => navigation.navigate('ManageTab', { screen: 'Recurring' })}>
+              <Text style={styles.seeAll}>See all</Text>
+            </TouchableOpacity>
+          </View>
+          {upcomingRecurring.map((item) => {
+            const daysUntil = getDaysUntil(item.next_due_date || item.start_date);
+            const isIncome = item.type === 'income';
+            return (
+              <View key={item.id} style={styles.recurringCard}>
+                <View style={[
+                  styles.recurringIcon,
+                  { backgroundColor: isIncome ? COLORS.incomeLight : COLORS.expenseLight },
+                ]}>
+                  <Ionicons
+                    name={isIncome ? 'arrow-down-circle-outline' : 'arrow-up-circle-outline'}
+                    size={22}
+                    color={isIncome ? COLORS.income : COLORS.expense}
+                  />
+                </View>
+                <View style={styles.recurringInfo}>
+                  <Text style={styles.recurringTitle} numberOfLines={1}>
+                    {item.description || item.category}
+                  </Text>
+                  <Text style={styles.recurringMeta}>
+                    {daysUntil <= 0 ? 'Due today' : `Due in ${daysUntil} day${daysUntil === 1 ? '' : 's'}`}
+                  </Text>
+                </View>
+                <Text style={[
+                  styles.recurringAmount,
+                  { color: isIncome ? COLORS.income : COLORS.expense },
+                ]}>
+                  {isIncome ? '+' : '-'}{formatCurrency(item.amount)}
+                </Text>
+              </View>
+            );
+          })}
         </View>
       )}
     </ScrollView>
@@ -224,4 +271,41 @@ const styles = StyleSheet.create({
   },
   emptyIcon: { fontSize: 40, marginBottom: 8 },
   emptyText: { fontSize: 14, color: COLORS.textSecondary, fontWeight: '500' },
+  recurringCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: COLORS.card,
+    borderRadius: 14,
+    padding: 14,
+    marginBottom: 10,
+    shadowColor: COLORS.shadow,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 1,
+    shadowRadius: 6,
+    elevation: 3,
+  },
+  recurringIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
+  recurringInfo: { flex: 1 },
+  recurringTitle: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: COLORS.text,
+    marginBottom: 3,
+  },
+  recurringMeta: {
+    fontSize: 12,
+    color: COLORS.textSecondary,
+    fontWeight: '600',
+  },
+  recurringAmount: {
+    fontSize: 15,
+    fontWeight: '900',
+  },
 });

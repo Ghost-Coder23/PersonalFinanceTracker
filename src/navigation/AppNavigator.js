@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { StyleSheet } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
 import { Ionicons } from '@expo/vector-icons';
@@ -13,10 +13,12 @@ import AddSubscriptionScreen from '../screens/AddSubscriptionScreen';
 import BudgetScreen from '../screens/BudgetScreen';
 import AddBudgetScreen from '../screens/AddBudgetScreen';
 import ReportsScreen from '../screens/ReportsScreen';
+import ManageScreen from '../screens/ManageScreen';
 import CustomersScreen from '../screens/CustomersScreen';
 import RecurringTransactionsScreen from '../screens/RecurringTransactionsScreen';
 import TagsScreen from '../screens/TagsScreen';
 import GoalsScreen from '../screens/GoalsScreen';
+import SettingsScreen from '../screens/SettingsScreen';
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
@@ -46,15 +48,6 @@ function TransactionsStack() {
   );
 }
 
-function SubscriptionsStack() {
-  return (
-    <Stack.Navigator screenOptions={stackOptions}>
-      <Stack.Screen name="Subscriptions" component={SubscriptionsScreen} options={{ title: 'Subscriptions' }} />
-      <Stack.Screen name="AddSubscription" component={AddSubscriptionScreen} options={{ title: 'Add Subscription' }} />
-    </Stack.Navigator>
-  );
-}
-
 function BudgetStack() {
   return (
     <Stack.Navigator screenOptions={stackOptions}>
@@ -72,34 +65,17 @@ function ReportsStack() {
   );
 }
 
-function CustomersStack() {
+function ManageStack() {
   return (
     <Stack.Navigator screenOptions={stackOptions}>
-      <Stack.Screen name="Customers" component={CustomersScreen} options={{ title: 'Customers' }} />
-    </Stack.Navigator>
-  );
-}
-
-function RecurringStack() {
-  return (
-    <Stack.Navigator screenOptions={stackOptions}>
+      <Stack.Screen name="Manage" component={ManageScreen} options={{ title: 'Manage' }} />
+      <Stack.Screen name="Subscriptions" component={SubscriptionsScreen} options={{ title: 'Subscriptions' }} />
+      <Stack.Screen name="AddSubscription" component={AddSubscriptionScreen} options={{ title: 'Add Subscription' }} />
       <Stack.Screen name="Recurring" component={RecurringTransactionsScreen} options={{ title: 'Recurring' }} />
-    </Stack.Navigator>
-  );
-}
-
-function TagsStack() {
-  return (
-    <Stack.Navigator screenOptions={stackOptions}>
-      <Stack.Screen name="Tags" component={TagsScreen} options={{ title: 'Tags' }} />
-    </Stack.Navigator>
-  );
-}
-
-function GoalsStack() {
-  return (
-    <Stack.Navigator screenOptions={stackOptions}>
       <Stack.Screen name="Goals" component={GoalsScreen} options={{ title: 'Goals' }} />
+      <Stack.Screen name="Customers" component={CustomersScreen} options={{ title: 'Customers' }} />
+      <Stack.Screen name="Tags" component={TagsScreen} options={{ title: 'Tags' }} />
+      <Stack.Screen name="Settings" component={SettingsScreen} options={{ title: 'Settings' }} />
     </Stack.Navigator>
   );
 }
@@ -117,13 +93,9 @@ export default function AppNavigator() {
           const icons = {
             HomeTab: focused ? 'home' : 'home-outline',
             TransactionsTab: focused ? 'swap-horizontal' : 'swap-horizontal-outline',
-            SubscriptionsTab: focused ? 'repeat' : 'repeat-outline',
             BudgetTab: focused ? 'wallet' : 'wallet-outline',
             ReportsTab: focused ? 'bar-chart' : 'bar-chart-outline',
-            CustomersTab: focused ? 'people' : 'people-outline',
-            RecurringTab: focused ? 'refresh' : 'refresh-outline',
-            TagsTab: focused ? 'pricetag' : 'pricetag-outline',
-            GoalsTab: focused ? 'flag' : 'flag-outline',
+            ManageTab: focused ? 'apps' : 'apps-outline',
           };
           return <Ionicons name={icons[route.name]} size={size} color={color} />;
         },
@@ -131,29 +103,16 @@ export default function AppNavigator() {
     >
       <Tab.Screen name="HomeTab" component={DashboardStack} options={{ title: 'Home' }} />
       <Tab.Screen name="TransactionsTab" component={TransactionsStack} options={{ title: 'Transactions' }} />
-      <Tab.Screen name="SubscriptionsTab" component={SubscriptionsStack} options={{ title: 'Subscriptions' }} />
       <Tab.Screen name="BudgetTab" component={BudgetStack} options={{ title: 'Budget' }} />
       <Tab.Screen name="ReportsTab" component={ReportsStack} options={{ title: 'Reports' }} />
-      <Tab.Screen
-        name="CustomersTab"
-        component={CustomersStack}
-        options={{
-          tabBarLabel: 'Customers',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="people" color={color} size={size} />
-          ),
-        }}
-      />
-      <Tab.Screen name="RecurringTab" component={RecurringStack} options={{ title: 'Recurring' }} />
-      <Tab.Screen name="TagsTab" component={TagsStack} options={{ title: 'Tags' }} />
-      <Tab.Screen name="GoalsTab" component={GoalsStack} options={{ title: 'Goals' }} />
+      <Tab.Screen name="ManageTab" component={ManageStack} options={{ title: 'Manage' }} />
     </Tab.Navigator>
   );
 }
 
 const styles = StyleSheet.create({
   tabBar: {
-    backgroundColor: COLORS.white,
+    backgroundColor: COLORS.card,
     borderTopColor: COLORS.border,
     borderTopWidth: 1,
     height: 65,

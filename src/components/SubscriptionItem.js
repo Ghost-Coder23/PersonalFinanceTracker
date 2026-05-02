@@ -6,6 +6,7 @@ import { getCategoryById } from '../utils/categories';
 import { formatCurrency, formatDate, getDaysUntil } from '../utils/formatters';
 
 export default function SubscriptionItem({ subscription, onDelete, onNotify }) {
+  if (!subscription) return null;
   const item = subscription;
   const category = getCategoryById(item.category, 'subscription');
   const daysUntil = getDaysUntil(item.next_renewal);

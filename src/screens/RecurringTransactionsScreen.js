@@ -58,12 +58,3 @@ export default function RecurringTransactionsScreen() {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, padding: 16, backgroundColor: '#fff' },
-  item: { padding: 16, borderBottomWidth: 1, borderColor: '#eee' },
-  name: { fontWeight: 'bold', fontSize: 16 },
-  details: { color: COLORS.textSecondary },
-  modalContent: { flex: 1, justifyContent: 'center', padding: 16 },
-  input: { borderWidth: 1, borderColor: '#ccc', borderRadius: 8, padding: 8, marginBottom: 12 },
-});

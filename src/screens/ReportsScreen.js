@@ -35,7 +35,7 @@ export default function ReportsScreen() {
   useFocusEffect(
     React.useCallback(() => {
       loadReportsData();
-    }, [selectedMonth, loadReportsData])
+    }, [loadReportsData]) // removed selectedMonth from deps
   );
 
   // Build last 6 months bar chart data

@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, FlatList, StyleSheet, TouchableOpacity, TextInput, Modal, Button, Alert } from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, TextInput, Modal, Alert } from 'react-native';
 import { COLORS } from '../utils/colors';
 import useStore from '../store/useStore';
+import { standardStyles } from '../utils/standardStyles';
 
 export default function TagsScreen() {
   const { tags, loadTags, addTag, removeTag } = useStore();
@@ -24,33 +25,33 @@ export default function TagsScreen() {
   };
 
   return (
-    <View style={styles.container}>
-      <Button title="Add Tag" onPress={() => setModalVisible(true)} />
+    <View style={standardStyles.container}>
+      <TouchableOpacity style={standardStyles.button} onPress={() => setModalVisible(true)}>
+        <Text style={standardStyles.buttonText}>Add Tag</Text>
+      </TouchableOpacity>
       <FlatList
         data={tags}
         keyExtractor={item => item.id.toString()}
         renderItem={({ item }) => (
-          <View style={styles.item}>
-            <Text style={styles.name}>{item.name}</Text>
-            <Button title="Delete" color={COLORS.expense} onPress={() => removeTag(item.id)} />
+          <View style={standardStyles.card}>
+            <Text style={[standardStyles.header, { fontSize: 16 }]}>{item.name}</Text>
+            <TouchableOpacity style={[standardStyles.button, { backgroundColor: COLORS.expense }]} onPress={() => removeTag(item.id)}>
+              <Text style={standardStyles.buttonText}>Delete</Text>
+            </TouchableOpacity>
           </View>
         )}
       />
       <Modal visible={modalVisible} animationType="slide">
-        <View style={styles.modalContent}>
-          <TextInput style={styles.input} placeholder="Tag Name" value={tagName} onChangeText={setTagName} />
-          <Button title="Save" onPress={handleSave} />
-          <Button title="Cancel" color={COLORS.expense} onPress={() => setModalVisible(false)} />
+        <View style={standardStyles.container}>
+          <TextInput style={standardStyles.input} placeholder="Tag Name" value={tagName} onChangeText={setTagName} />
+          <TouchableOpacity style={standardStyles.button} onPress={handleSave}>
+            <Text style={standardStyles.buttonText}>Save</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={[standardStyles.button, { backgroundColor: COLORS.expense }]} onPress={() => setModalVisible(false)}>
+            <Text style={standardStyles.buttonText}>Cancel</Text>
+          </TouchableOpacity>
         </View>
       </Modal>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, padding: 16, backgroundColor: '#fff' },
-  item: { padding: 16, borderBottomWidth: 1, borderColor: '#eee' },
-  name: { fontWeight: 'bold', fontSize: 16 },
-  modalContent: { flex: 1, justifyContent: 'center', padding: 16 },
-  input: { borderWidth: 1, borderColor: '#ccc', borderRadius: 8, padding: 8, marginBottom: 12 },
-});

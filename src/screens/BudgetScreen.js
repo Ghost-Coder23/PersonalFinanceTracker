@@ -20,8 +20,7 @@ export default function BudgetScreen({ navigation }) {
   useFocusEffect(
     React.useCallback(() => {
       loadBudgets();
-      loadMonthData();
-    }, [selectedMonth, loadBudgets, loadMonthData])
+    }, [loadBudgets])
   );
 
   // Build spent map from expenses by category

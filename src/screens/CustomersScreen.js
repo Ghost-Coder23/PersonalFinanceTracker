@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, FlatList, StyleSheet, TouchableOpacity, TextInput, Modal, Button } from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, TextInput, Modal } from 'react-native';
 import { COLORS } from '../utils/colors';
 import useStore, { useLoadCustomers } from '../store/useStore';
+import { standardStyles } from '../utils/standardStyles';
 
 export default function CustomersScreen() {
   const { customers, addCustomer, updateCustomer, removeCustomer } = useStore();
@@ -32,59 +33,38 @@ export default function CustomersScreen() {
   };
 
   return (
-    <View style={styles.container}>
-      <Button title="Add Customer" onPress={() => openModal()} />
+    <View style={standardStyles.container}>
+      <TouchableOpacity style={standardStyles.button} onPress={() => openModal()}>
+        <Text style={standardStyles.buttonText}>Add Customer</Text>
+      </TouchableOpacity>
       <FlatList
         data={customers}
         keyExtractor={item => item.id.toString()}
         renderItem={({ item }) => (
-          <TouchableOpacity style={styles.item} onPress={() => openModal(item)}>
-            <Text style={styles.name}>{item.name}</Text>
-            <Text style={styles.details}>{item.email} | {item.phone}</Text>
-            <Text style={styles.details}>{item.notes}</Text>
-            <Button title="Delete" color={COLORS.expense} onPress={() => removeCustomer(item.id)} />
+          <TouchableOpacity style={standardStyles.card} onPress={() => openModal(item)}>
+            <Text style={[standardStyles.header, { fontSize: 16 }]}>{item.name}</Text>
+            <Text style={standardStyles.label}>{item.email} | {item.phone}</Text>
+            <Text style={standardStyles.label}>{item.notes}</Text>
+            <TouchableOpacity style={[standardStyles.button, { backgroundColor: COLORS.expense }]} onPress={() => removeCustomer(item.id)}>
+              <Text style={standardStyles.buttonText}>Delete</Text>
+            </TouchableOpacity>
           </TouchableOpacity>
         )}
       />
       <Modal visible={modalVisible} animationType="slide">
-        <View style={styles.modalContent}>
-          <TextInput
-            style={styles.input}
-            placeholder="Name"
-            value={form.name}
-            onChangeText={text => setForm({ ...form, name: text })}
-          />
-          <TextInput
-            style={styles.input}
-            placeholder="Email"
-            value={form.email}
-            onChangeText={text => setForm({ ...form, email: text })}
-          />
-          <TextInput
-            style={styles.input}
-            placeholder="Phone"
-            value={form.phone}
-            onChangeText={text => setForm({ ...form, phone: text })}
-          />
-          <TextInput
-            style={styles.input}
-            placeholder="Notes"
-            value={form.notes}
-            onChangeText={text => setForm({ ...form, notes: text })}
-          />
-          <Button title="Save" onPress={handleSave} />
-          <Button title="Cancel" color={COLORS.expense} onPress={() => setModalVisible(false)} />
+        <View style={standardStyles.container}>
+          <TextInput style={standardStyles.input} placeholder="Name" value={form.name} onChangeText={text => setForm({ ...form, name: text })} />
+          <TextInput style={standardStyles.input} placeholder="Email" value={form.email} onChangeText={text => setForm({ ...form, email: text })} />
+          <TextInput style={standardStyles.input} placeholder="Phone" value={form.phone} onChangeText={text => setForm({ ...form, phone: text })} />
+          <TextInput style={standardStyles.input} placeholder="Notes" value={form.notes} onChangeText={text => setForm({ ...form, notes: text })} />
+          <TouchableOpacity style={standardStyles.button} onPress={handleSave}>
+            <Text style={standardStyles.buttonText}>Save</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={[standardStyles.button, { backgroundColor: COLORS.expense }]} onPress={() => setModalVisible(false)}>
+            <Text style={standardStyles.buttonText}>Cancel</Text>
+          </TouchableOpacity>
         </View>
       </Modal>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, padding: 16, backgroundColor: '#fff' },
-  item: { padding: 16, borderBottomWidth: 1, borderColor: '#eee' },
-  name: { fontWeight: 'bold', fontSize: 16 },
-  details: { color: COLORS.textSecondary },
-  modalContent: { flex: 1, justifyContent: 'center', padding: 16 },
-  input: { borderWidth: 1, borderColor: '#ccc', borderRadius: 8, padding: 8, marginBottom: 12 },
-});

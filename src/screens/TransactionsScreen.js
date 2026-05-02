@@ -21,7 +21,7 @@ export default function TransactionsScreen({ navigation }) {
   useFocusEffect(
     React.useCallback(() => {
       loadTransactions();
-    }, [selectedMonth, loadTransactions])
+    }, [loadTransactions])
   );
 
   const filtered = transactions.filter((t) => {
